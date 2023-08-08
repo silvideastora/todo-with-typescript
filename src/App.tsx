@@ -27,7 +27,17 @@ const mockTodos = [
 const App = (): JSX.Element => {
 
   const [ todos, setTodos ] = useState(mockTodos)
-  const [ filterSelected, setFilterSelected ]= useState<FilterValue>(TODO_FILTERS.ALL)
+  const [ filterSelected, setFilterSelected ]= useState<FilterValue>(() => {
+    const params = new URLSearchParams(window.location.search)
+    const filter = params.get('filter') as FilterValue | null
+      if(filter === null) return TODO_FILTERS.ALL
+    //checa si el filtro es válido, sino retorna ALL
+    return Object
+      .values(TODO_FILTERS)
+      .includes(filter)
+      ? filter
+      :TODO_FILTERS.ALL
+  })
   
   const handleRemove = ({id}:TodoId): void => {
     const newTodos = todos.filter(todo => todo.id !== id)
@@ -54,6 +64,9 @@ const App = (): JSX.Element => {
   }
   const handleFilterChange = (filter: FilterValue): void => {
     setFilterSelected(filter)
+    const params = new URLSearchParams(window.location.search)
+    params.set('filter', filter)
+    window.history.pushState({}, '', `${window.location.pathname}?${params.toString()}`)
   }
   const activeCount= todos.filter(todo => !todo.completed).length
   const completedCount = todos.length - activeCount
